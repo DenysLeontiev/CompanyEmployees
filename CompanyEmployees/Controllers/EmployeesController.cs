@@ -29,6 +29,7 @@ namespace CompanyEmployees.Controllers
         }
 
         [HttpGet]
+        [HttpHead]
         public async Task<ActionResult> GetEmployeesForCompany(Guid companyId, [FromQuery] EmployeeParametrs employeeParametrs)
         {
             if(employeeParametrs.ValidateAgeRange == false)

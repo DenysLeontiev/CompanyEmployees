@@ -30,6 +30,7 @@ builder.Services.AddScoped<ValidateCompanyExistsAttribute>();
 builder.Services.AddScoped<ValidateEmployeeForCompanyExistsAttribute>();
 builder.Services.AddScoped<CompanyExistsAttribute>();
 builder.Services.AddScoped<EmployeeExistsAttribute>();
+builder.Services.ConfigureVersioning();
 
 builder.Services.AddScoped<IDataShaper<EmployeeDto>, DataShaper<EmployeeDto>>();
 

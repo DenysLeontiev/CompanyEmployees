@@ -1,9 +1,12 @@
 ﻿using Contracts;
 using Entities;
 using LoggerService;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Versioning;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Repository;
+using System.Reflection.PortableExecutable;
 
 namespace CompanyEmployees.Extensions
 {
@@ -49,6 +52,17 @@ namespace CompanyEmployees.Extensions
         public static void ConfigureRepositoryManager(this IServiceCollection services)
         {
             services.AddScoped<IRepositoryManager, RepositoryManager>();
+        }
+
+        public static void ConfigureVersioning(this IServiceCollection services)
+        {
+            services.AddApiVersioning(opts =>
+            {
+                opts.ReportApiVersions = true; // adds the API version to the response header
+                opts.AssumeDefaultVersionWhenUnspecified = true; // It specifies the default API version if the client doesn’t send one.
+                opts.DefaultApiVersion = new ApiVersion(1, 0); // self explanatory
+                opts.ApiVersionReader = new HeaderApiVersionReader("api-version"); // if we don’t want to change the URI of the API, we can send the version in the HTTP Header
+            });
         }
     }
 }

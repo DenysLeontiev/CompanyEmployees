@@ -9,6 +9,7 @@ using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Database;
 
 namespace CompanyEmployees.Controllers
 {
+    [ApiVersion("1.0")]
     [ApiController]
     [Route("api/companies")]
     public class CompaniesController : ControllerBase
@@ -21,6 +22,14 @@ namespace CompanyEmployees.Controllers
             _repository = repository;
             _logger = logger;
             _mapper = mapper;
+        }
+
+        [HttpOptions]
+        public IActionResult GetCompaniesOptions()
+        {
+            Response.Headers.Add("allow", "GET, OPTIONS, POST");
+
+            return Ok();
         }
 
         [HttpGet]
