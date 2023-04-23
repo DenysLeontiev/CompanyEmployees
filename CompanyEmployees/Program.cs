@@ -1,10 +1,13 @@
 ﻿using CompanyEmployees.ActionFilters;
 using CompanyEmployees.Extensions;
 using Contracts;
+using Entities;
+using Entities.DataTransferObjects;
 using LoggerService;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Mvc;
 using NLog;
+using Repository;
 
 LogManager.LoadConfiguration(string.Concat(Directory.GetCurrentDirectory(), "/nlog.config"));
 
@@ -26,6 +29,9 @@ builder.Services.AddScoped<ValidationFilterAttribute>(); // validation attribute
 builder.Services.AddScoped<ValidateCompanyExistsAttribute>();
 builder.Services.AddScoped<ValidateEmployeeForCompanyExistsAttribute>();
 builder.Services.AddScoped<CompanyExistsAttribute>();
+builder.Services.AddScoped<EmployeeExistsAttribute>();
+
+builder.Services.AddScoped<IDataShaper<EmployeeDto>, DataShaper<EmployeeDto>>();
 
 builder.Services.Configure<ApiBehaviorOptions>(options => // to return 422 in place of 400(Bad Request) when the ModelState is invalid
 {

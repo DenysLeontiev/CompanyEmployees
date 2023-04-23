@@ -4,8 +4,10 @@ using CompanyEmployees.ActionFilters;
 using Contracts;
 using Entities;
 using Entities.DataTransferObjects;
+using Entities.PaginationParametrs;
 using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
+using System.Text.Json;
 
 namespace CompanyEmployees.Controllers
 {
@@ -16,44 +18,51 @@ namespace CompanyEmployees.Controllers
         private readonly IRepositoryManager _repositoryManager;
         private readonly IMapper _mapper;
         private readonly ILoggerManager _logger;
+        private readonly IDataShaper<EmployeeDto> _dataShaper;
 
-        public EmployeesController(IRepositoryManager repositoryManager, IMapper mapper, ILoggerManager logger)
+        public EmployeesController(IRepositoryManager repositoryManager, IMapper mapper, ILoggerManager logger, IDataShaper<EmployeeDto> dataShaper)
         {
             _repositoryManager = repositoryManager;
             _mapper = mapper;
             _logger = logger;
+            _dataShaper = dataShaper;
         }
 
         [HttpGet]
-        public async Task<ActionResult> GetEmployeesForCompany(Guid companyId)
+        public async Task<ActionResult> GetEmployeesForCompany(Guid companyId, [FromQuery] EmployeeParametrs employeeParametrs)
         {
+            if(employeeParametrs.ValidateAgeRange == false)
+            {
+                return BadRequest("MaxAge can't be less that MinAge");
+            }
+
             var employeeCompany = await _repositoryManager.Company.GetCompanyAsync(companyId, false);
             if(employeeCompany == null)
             {
                 return NotFound();
             }
 
-            var employees = _repositoryManager.Employee.GetAllEmployees(employeeCompany.Id, false);
+            var employees = _repositoryManager.Employee.GetAllEmployees(employeeCompany.Id, employeeParametrs,false);
 
             if (employees == null)
             {
                 return NotFound();
             }
 
+            Response.Headers.Add("X-Pagination", JsonSerializer.Serialize(employees.MetaData));
+
             var employeesToReturn = _mapper.Map<IEnumerable<EmployeeDto>>(employees);
+
+            return Ok(_dataShaper.ShapeData(employeesToReturn, employeeParametrs.Fields));
 
             return Ok(employeesToReturn);
         }
 
+        [ServiceFilter(typeof(EmployeeExistsAttribute))]
         [HttpGet("{id}", Name = "GetEmployeeById")]
-        public IActionResult GetEmployee(Guid companyId,Guid id)
+        public IActionResult GetEmployee(Guid companyId, Guid id)
         {
-            var employee = _repositoryManager.Employee.GetEmployee(companyId, id, trackChanges: false);
-
-            if(employee == null)
-            {
-                return NotFound();
-            }
+            var employee = HttpContext.Items["employee"];
 
             var employeeToReturn = _mapper.Map<EmployeeDto>(employee);
             return Ok(employeeToReturn);
@@ -113,7 +122,7 @@ namespace CompanyEmployees.Controllers
             return NoContent();
         }
 
-        [ServiceFilter(typeof(ValidationFilterAttribute))]
+        //[ServiceFilter(typeof(ValidationFilterAttribute))]
         [HttpPost]
         public async Task<IActionResult> CreateEmployeeForCompany(Guid companyId, [FromBody] EmployeeForCreationDto employeeForCreationDto)
         {
@@ -136,6 +145,7 @@ namespace CompanyEmployees.Controllers
             _repositoryManager.Employee.CreateEmployeeForCompany(companyId, employee);
             await _repositoryManager.SaveAsync();
 
+            employeeDto.Id = employee.Id;
             return CreatedAtRoute("GetEmployeeById", new { companyId, id = employeeDto.Id }, employeeDto);
         }
 

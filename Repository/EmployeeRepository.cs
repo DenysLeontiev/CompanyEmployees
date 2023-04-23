@@ -1,5 +1,8 @@
 ﻿using Contracts;
 using Entities;
+using Entities.PaginationParametrs;
+using Entities.RequestFeature;
+using Repository.Extensions;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -15,9 +18,15 @@ namespace Repository
 
         }
 
-        public IEnumerable<Employee> GetAllEmployees(Guid companyId, bool trackChanges)
+        public PagedList<Employee> GetAllEmployees(Guid companyId,EmployeeParametrs employeeParametrs ,bool trackChanges)
         {
-            return FindByCondition(e => e.CompanyId.Equals(companyId), trackChanges).OrderBy(e => e.Name);
+            var employees = FindByCondition(e => e.CompanyId.Equals(companyId), trackChanges)
+                            .Filter(employeeParametrs.MinAge, employeeParametrs.MaxAge)
+                            .Search(employeeParametrs.SearchTerm)
+                            .Sort(employeeParametrs.OrderBy)
+                            .ToList();
+
+            return PagedList<Employee>.ToPagedList(employees, employeeParametrs.PageNumber, employeeParametrs.PageSize);
         }
 
         public Employee GetEmployee(Guid companyId, Guid employeeId, bool trackChanges)
@@ -35,5 +44,6 @@ namespace Repository
             employee.CompanyId = companyId;
             Create(employee);
         }
+
     }
 }

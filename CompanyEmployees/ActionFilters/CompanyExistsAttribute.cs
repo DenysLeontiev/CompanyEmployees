@@ -19,7 +19,7 @@ namespace CompanyEmployees.ActionFilters
         public async Task OnActionExecutionAsync(ActionExecutingContext context, ActionExecutionDelegate next)
         {
             var companyId = (Guid)context.ActionArguments["id"];
-            var company = _repositoryManager.Company.GetCompanyAsync(companyId, false);
+            var company = await _repositoryManager.Company.GetCompanyAsync(companyId, false);
 
             if(company == null)
             {
