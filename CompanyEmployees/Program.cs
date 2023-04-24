@@ -1,4 +1,5 @@
-﻿using CompanyEmployees.ActionFilters;
+﻿using AspNetCoreRateLimit;
+using CompanyEmployees.ActionFilters;
 using CompanyEmployees.Extensions;
 using Contracts;
 using Entities;
@@ -38,6 +39,12 @@ builder.Services.ConfigureVersioning();
 builder.Services.ConfigureResponseCaching(); // for caching
 builder.Services.ConfigureHttpCacheHeaders(); // for caching
 
+builder.Services.AddMemoryCache(); // Throttling and Rate Liminting relies on that
+builder.Services.AddInMemoryRateLimiting(); // Throttling and Rate Liminting relies on that
+builder.Services.ConfigureRateLimitOptions();
+builder.Services.AddHttpContextAccessor(); // we can gain access to current HttpContext
+builder.Services.AddInMemoryRateLimiting();
+
 builder.Services.AddScoped<IDataShaper<EmployeeDto>, DataShaper<EmployeeDto>>();
 
 builder.Services.Configure<ApiBehaviorOptions>(options => // to return 422 in place of 400(Bad Request) when the ModelState is invalid
@@ -66,8 +73,12 @@ app.UseForwardedHeaders(new ForwardedHeadersOptions
     ForwardedHeaders = ForwardedHeaders.All
 });
 
+//app.UseIpRateLimiting(); // for Throttling and Rate Limiting
+
 app.UseResponseCaching(); // for caching
 app.UseHttpCacheHeaders(); // for caching
+
+app.UseIpRateLimiting();
 
 ILoggerManager? loggerManager = builder.Services.BuildServiceProvider().CreateScope().ServiceProvider.GetRequiredService<ILoggerManager>();
 app.ConfigureExceptionHandler(loggerManager);

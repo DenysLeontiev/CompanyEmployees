@@ -1,4 +1,5 @@
-﻿using Contracts;
+﻿using AspNetCoreRateLimit;
+using Contracts;
 using Entities;
 using LoggerService;
 using Marvin.Cache.Headers;
@@ -82,6 +83,30 @@ namespace CompanyEmployees.Extensions
             {
                 validationOpts.MustRevalidate = true;
             });
+        }
+
+        public static void ConfigureRateLimitOptions(this IServiceCollection services)
+        {
+            var rateLimitRules = new List<RateLimitRule> // here we add RateLimitRules
+            {
+                new RateLimitRule
+                {
+                    Endpoint = "*", // that rule applies to every endpoint
+                    Limit = 3,    // maximum amount of 3 requests per 5 minutes on every request
+                    Period = "5m" // we have 3 requests per 5 minutes
+                }
+            };
+
+
+            services.Configure<IpRateLimitOptions>(opts =>
+            {
+                opts.GeneralRules = rateLimitRules;
+            });
+
+            services.AddSingleton<IRateLimitCounterStore, MemoryCacheRateLimitCounterStore>();
+            services.AddSingleton<IIpPolicyStore, MemoryCacheIpPolicyStore>();
+            services.AddSingleton<IRateLimitConfiguration, RateLimitConfiguration>();
+
         }
     }
 }
