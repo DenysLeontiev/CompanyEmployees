@@ -12,6 +12,7 @@ namespace CompanyEmployees.Controllers
     [ApiVersion("1.0")]
     [ApiController]
     [Route("api/companies")]
+    //[ResponseCache(CacheProfileName ="120SecondsDuration")] // it has to match, what we have specified in AddControllers(config => ...);
     public class CompaniesController : ControllerBase
     {
         private readonly IRepositoryManager _repository;
@@ -45,6 +46,7 @@ namespace CompanyEmployees.Controllers
 
         [ServiceFilter(typeof(CompanyExistsAttribute))]
         [HttpGet("{id}", Name = "GetCompanyById")]
+        //[ResponseCache(Duration = 60)]
         public async Task<IActionResult> GetCompany(Guid id) 
         {
             var company = HttpContext.Items["company"] as Company;

@@ -1,6 +1,7 @@
 ﻿using Contracts;
 using Entities;
 using LoggerService;
+using Marvin.Cache.Headers;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Versioning;
 using Microsoft.EntityFrameworkCore;
@@ -62,6 +63,24 @@ namespace CompanyEmployees.Extensions
                 opts.AssumeDefaultVersionWhenUnspecified = true; // It specifies the default API version if the client doesn’t send one.
                 opts.DefaultApiVersion = new ApiVersion(1, 0); // self explanatory
                 opts.ApiVersionReader = new HeaderApiVersionReader("api-version"); // if we don’t want to change the URI of the API, we can send the version in the HTTP Header
+            });
+        }
+
+        public static void ConfigureResponseCaching(this IServiceCollection services) // for caching
+        {
+            services.AddResponseCaching();
+        }
+
+        public static void ConfigureHttpCacheHeaders(this IServiceCollection services) // for caching
+        {
+            services.AddHttpCacheHeaders((expirationOpts) => 
+            {
+                expirationOpts.MaxAge = 65;
+                expirationOpts.CacheLocation = CacheLocation.Private;
+            },
+            (validationOpts) =>
+            {
+                validationOpts.MustRevalidate = true;
             });
         }
     }

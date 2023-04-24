@@ -13,7 +13,11 @@ LogManager.LoadConfiguration(string.Concat(Directory.GetCurrentDirectory(), "/nl
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddControllers().AddNewtonsoftJson();
+builder.Services.AddControllers(config =>
+{
+    config.CacheProfiles.Add("120SecondsDuration", new CacheProfile { Duration = 120 }); // caching duration
+}).AddNewtonsoftJson();
+
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
@@ -31,6 +35,8 @@ builder.Services.AddScoped<ValidateEmployeeForCompanyExistsAttribute>();
 builder.Services.AddScoped<CompanyExistsAttribute>();
 builder.Services.AddScoped<EmployeeExistsAttribute>();
 builder.Services.ConfigureVersioning();
+builder.Services.ConfigureResponseCaching(); // for caching
+builder.Services.ConfigureHttpCacheHeaders(); // for caching
 
 builder.Services.AddScoped<IDataShaper<EmployeeDto>, DataShaper<EmployeeDto>>();
 
@@ -59,6 +65,9 @@ app.UseForwardedHeaders(new ForwardedHeadersOptions
 {
     ForwardedHeaders = ForwardedHeaders.All
 });
+
+app.UseResponseCaching(); // for caching
+app.UseHttpCacheHeaders(); // for caching
 
 ILoggerManager? loggerManager = builder.Services.BuildServiceProvider().CreateScope().ServiceProvider.GetRequiredService<ILoggerManager>();
 app.ConfigureExceptionHandler(loggerManager);
